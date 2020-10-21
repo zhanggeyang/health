@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.itheima.dao.PermissionDao">
+    <!--根据角色ID查询权限-->
+    <select id="queryPremissionByRoleID" parameterType="int" resultType="cn.itheima.pojo.Permission">
+		SELECT
+			tp.*
+		FROM
+			t_permission tp,
+			t_role_permission trp
+		WHERE
+		trp.permission_id = tp.id
+		AND trp.role_id = #{id}
+</select>
+</mapper>

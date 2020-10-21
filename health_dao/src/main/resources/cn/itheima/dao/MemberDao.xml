@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.itheima.dao.MemberDao">
+
+    <!--查询用户是否为会员-->
+    <select id="isMember" parameterType="string" resultType="cn.itheima.pojo.Member">
+        SELECT * FROM t_member WHERE phoneNumber = #{telephone}
+    </select>
+
+    <!--用户注册-->
+    <insert id="doRegister" parameterType="cn.itheima.pojo.Member">
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into
+        t_member
+        (fileNumber,name,sex,idCard,phoneNumber,
+        regTime,password,email,birthday,remark)
+        values
+        (#{fileNumber},#{name},#{sex},#{idCard},#{phoneNumber},
+        #{regTime},#{password},#{email},#{birthday},#{remark})
+    </insert>
+
+    <!--用月份集合查询对应的每月会员数量-->
+    <select id="queryCountByMonth" parameterType="string" resultType="integer">
+        SELECT COUNT(*) FROM t_member WHERE regTime LIKE "%${value}%"
+    </select>
+
+</mapper>

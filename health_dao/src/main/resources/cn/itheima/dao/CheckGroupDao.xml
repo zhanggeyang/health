@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.itheima.dao.CheckGroupDao">
+    <!--检查所有的检查项-->
+    <select id="findAllCheckItem" resultType="cn.itheima.pojo.CheckItem">
+        SELECT * FROM t_checkitem
+    </select>
+
+    <!--添加检查组-->
+    <insert id="add" parameterType="cn.itheima.pojo.CheckGroup">
+        <selectKey resultType="Integer" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO t_checkgroup
+        (code,name,sex,helpCode,remark,attention)
+        values
+        (#{code},#{name},#{sex},#{helpCode},#{remark},#{attention})
+    </insert>
+    <!--更新检查组检查项中间表信息-->
+    <insert id="setCheckGroupAndCheckItem" parameterType="hashmap">
+         insert into t_checkgroup_checkitem(checkgroup_id,checkitem_id)
+      		values
+      	(#{checkgroup_id},#{checkitem_id})
+    </insert>
+
+    <!--检查组分页-->
+    <select id="selectByCondition" parameterType="string" resultType="cn.itheima.pojo.CheckGroup">
+        select * from t_checkgroup
+        <if test="value != null and value.length > 0">
+            where code = #{value} or name = #{value} or helpCode = #{value}
+        </if>
+    </select>
+
+    <!--根据ID查询检查组-->
+    <select id="findCGById" parameterType="int" resultType="cn.itheima.pojo.CheckGroup">
+        SELECT * FROM t_checkgroup WHERE id = #{id}
+    </select>
+
+    <!--查询当前选项卡检查组对应的所有的检查项信息-->
+    <select id="findCheckItemIdsByCheckGroupId" parameterType="Integer" resultType="Integer">
+       select checkitem_id from t_checkgroup_checkitem  where checkgroup_id = #{id}
+    </select>
+
+    <!--编辑检查组-->
+    <update id="edit" parameterType="cn.itheima.pojo.CheckGroup">
+        UPDATE t_checkgroup
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="sex != null">
+                sex = #{sex},
+            </if>
+            <if test="code != null">
+                code = #{code},
+            </if>
+            <if test="helpCode != null">
+                helpCode = #{helpCode},
+            </if>
+            <if test="attention != null">
+                attention = #{attention},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--清理旧关系-->
+    <delete id="deleteAssociationByCGId" parameterType="int">
+        delete from t_checkgroup_checkitem where checkgroup_id = #{id}
+    </delete>
+
+    <!--删除检查组-->
+    <delete id="deleteCheckGroupById" parameterType="int">
+        DELETE FROM t_checkgroup WHERE id = #{id}
+    </delete>
+
+    <!--查询所有的检查组-->
+    <select id="findAllCheckGroup" resultType="cn.itheima.pojo.CheckGroup">
+        SELECT * FROM t_checkgroup
+    </select>
+
+
+    <!--**********************************************************-->
+    <!--查询与检查套餐对应的检查组展示到移动端页面-->
+    <resultMap id="d" type="cn.itheima.pojo.CheckGroup">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="helpCode" property="helpCode"/>
+        <result column="sex" property="sex"/>
+        <result column="remark" property="remark"/>
+        <result column="attention" property="attention"/>
+    </resultMap>
+
+    <resultMap id="c" type="cn.itheima.pojo.CheckGroup" extends="d">
+        <collection property="checkItems"
+                    javaType="list"
+                    ofType="cn.itheima.pojo.CheckItem"
+                    column="id"
+                    select="cn.itheima.dao.CheckItemDao.findAllCheckItemByID">
+        </collection>
+    </resultMap>
+    <select id="queryAllCheckGroup" parameterType="Integer" resultMap="c">
+        select tc.* from t_checkgroup tc,t_setmeal_checkgroup tsc where tc.id = tsc.checkgroup_id
+      and tsc.setmeal_id = #{id}
+    </select>
+</mapper>

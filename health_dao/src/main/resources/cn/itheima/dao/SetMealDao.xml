@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.itheima.dao.SetMealDao">
+    <!--新增-->
+    <insert id="add" parameterType="cn.itheima.pojo.Setmeal">
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into t_setmeal
+        (code,name,sex,age,helpCode,price,remark,attention,img)
+        values
+        (#{code},#{name},#{sex},#{age},#{helpCode},#{price},#{remark},#{attention},#{img})
+    </insert>
+    <!--绑定套餐和检查组多对多关系-->
+    <insert id="setAssociationCheckGroupAndSetMeal" parameterType="hashmap">
+        insert into t_setmeal_checkgroup
+        (setmeal_id,checkgroup_id)
+        values
+        (#{setmeal_Id},#{checkgroup_Id})
+    </insert>
+
+    <!--套餐分页-->
+    <select id="selectByCondition" parameterType="string" resultType="cn.itheima.pojo.Setmeal">
+        select * from t_setmeal
+        <if test="value != null and value.length > 0">
+            where code = #{value} or name = #{value} or helpCode = #{value}
+        </if>
+    </select>
+
+    <!--查所有套餐展示到移动端-->
+    <select id="findAllSetMeal" resultType="cn.itheima.pojo.Setmeal">
+        SELECT * FROM t_setmeal
+    </select>
+    <!--***********************************************-->
+    <!--映射查询所有的套餐信息-->
+    <resultMap id="b" type="cn.itheima.pojo.Setmeal">
+        <id column="id" property="id"></id>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="helpCode" property="helpCode"/>
+        <result column="sex" property="sex"/>
+        <result column="age" property="age"/>
+        <result column="price" property="price"/>
+        <result column="remark" property="remark"/>
+        <result column="attention" property="attention"/>
+        <result column="img" property="img"/>
+    </resultMap>
+
+    <!--映射查询与上面套餐之对应的检查组信息-->
+    <resultMap id="a" type="cn.itheima.pojo.Setmeal" extends="b">
+        <collection property="checkGroups"
+                    javaType="list"
+                    ofType="cn.itheima.pojo.CheckGroup"
+                    column="id"
+                    select="cn.itheima.dao.CheckGroupDao.queryAllCheckGroup">
+        </collection>
+    </resultMap>
+    <!--根据ID查找套餐列表-->
+    <select id="findSetMealById" parameterType="Integer" resultMap="a">
+        SELECT * FROM t_setmeal WHERE id = #{id}
+    </select>
+
+    <!--根据套餐id查询对应的检查组-->
+    <select id="findCheckGroupBySetmealId" parameterType="Integer" resultType="Integer">
+        SELECT checkgroup_id FROM t_setmeal_checkgroup WHERE setmeal_id = #{id}
+    </select>
+
+    <!--根据套餐id清除与检查组的关联关系-->
+    <delete id="deleteAssociationBySetmeaId" parameterType="int">
+        DELETE FROM t_setmeal_checkgroup WHERE setmeal_id = #{id}
+    </delete>
+
+    <!--根据套餐id删除对应套餐-->
+    <delete id="deleteSetmealById" parameterType="int">
+        DELETE FROM t_setmeal WHERE id = #{id}
+    </delete>
+
+    <!--查询已经预约的套餐名和对应的数量-->
+    <select id="queryOrderedSetmealCountAndName" resultType="map">
+        SELECT
+	      ts.`name`,
+	      COUNT(*) AS value
+        FROM
+	      t_setmeal ts,
+	      t_order tor
+        WHERE
+          ts.id = tor.setmeal_id
+        GROUP BY ts.id
+    </select>
+</mapper>
